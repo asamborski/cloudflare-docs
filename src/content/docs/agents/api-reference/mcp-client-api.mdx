@@ -161,14 +161,8 @@ class MyAgent extends Agent {
 		);
 
 		if (result.state === "authenticating") {
-			// Option 1: Redirect the user
+			// Redirect the user to the OAuth authorization page
 			return Response.redirect(result.authUrl);
-
-			// Option 2: Return the URL for client-side redirect
-			return Response.json({
-				status: "needs_auth",
-				authUrl: result.authUrl,
-			});
 		}
 
 		return Response.json({ status: "connected", id: result.id });
@@ -345,14 +339,15 @@ To use MCP tools with the Vercel AI SDK, use `this.mcp.getAITools()` which conve
 
 ```ts
 import { generateText } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { createWorkersAI } from "workers-ai-provider";
 
-export class MyAgent extends Agent {
+export class MyAgent extends Agent<Env> {
 	async onRequest(request: Request) {
+		const workersai = createWorkersAI({ binding: this.env.AI });
 		const response = await generateText({
-			model: openai("gpt-4"),
+			model: workersai("@cf/zai-org/glm-4.7-flash"),
 			prompt: "What's the weather in San Francisco?",
-			tools: this.mcp.getAITools(), // Converts MCP tools to AI SDK format
+			tools: this.mcp.getAITools(),
 		});
 
 		return new Response(response.text);
@@ -450,9 +445,10 @@ function Dashboard() {
 
 ### `addMcpServer()`
 
-Add a connection to an MCP server and make its tools available to your agent.
+Add a connection to an MCP server and make its tools available to your agent. If `addMcpServer` is called with a `serverName` that already has an active connection, the existing connection is returned instead of creating a duplicate. This makes it safe to call in `onStart()` without worrying about duplicate connections on restart.
 
 ```ts
+// HTTP transport (Streamable HTTP, SSE)
 async addMcpServer(
   serverName: string,
   url: string,
@@ -465,24 +461,31 @@ async addMcpServer(
       headers?: HeadersInit;
       type?: "sse" | "streamable-http" | "auto";
     };
-    retry?: {
-      maxAttempts?: number;
-      baseDelayMs?: number;
-      maxDelayMs?: number;
-    };
+    retry?: RetryOptions;
   }
 ): Promise<
   | { id: string; state: "authenticating"; authUrl: string }
   | { id: string; state: "ready" }
 >
+
+// RPC transport (Durable Object binding — no HTTP overhead)
+async addMcpServer(
+  serverName: string,
+  binding: DurableObjectNamespace,
+  options?: {
+    props?: Record<string, unknown>;
+    client?: ClientOptions;
+    retry?: RetryOptions;
+  }
+): Promise<{ id: string; state: "ready" }>
 ```
 
-#### Parameters
+#### Parameters (HTTP transport)
 
 - `serverName` (string, required) — Display name for the MCP server
 - `url` (string, required) — URL of the MCP server endpoint
 - `options` (object, optional) — Connection configuration:
-  - `callbackHost` — Host for OAuth callback URL. If omitted, automatically derived from the incoming request
+  - `callbackHost` — Host for OAuth callback URL. Only needed for OAuth-authenticated servers. If omitted, automatically derived from the incoming request
   - `callbackPath` — Custom callback URL path that bypasses the default `/agents/{class}/{name}/callback` construction. **Required when `sendIdentityOnConnect` is `false`** to prevent leaking the instance name. When set, the callback URL becomes `{callbackHost}/{callbackPath}`. You must route this path to the agent instance via `getAgentByName`
   - `agentsPrefix` — URL prefix for OAuth callback path. Default: `"agents"`. Ignored when `callbackPath` is provided
   - `client` — MCP client configuration options (passed to `@modelcontextprotocol/sdk` Client constructor). By default, includes `CfWorkerJsonSchemaValidator` for validating tool parameters against JSON schemas
@@ -490,6 +493,17 @@ async addMcpServer(
     - `headers` — Custom HTTP headers for authentication
     - `type` — Transport type: `"auto"` (default), `"streamable-http"`, or `"sse"`
   - `retry` — Retry options for connection and reconnection attempts. Persisted and used when restoring connections after hibernation or after OAuth completion. Default: 3 attempts, 500ms base delay, 5s max delay. Refer to [Retries](/agents/api-reference/retries/) for details on `RetryOptions`.
+
+#### Parameters (RPC transport)
+
+- `serverName` (string, required) — Display name for the MCP server
+- `binding` (`DurableObjectNamespace`, required) — The Durable Object binding for the `McpAgent` class
+- `options` (object, optional) — Connection configuration:
+  - `props` — Initialization data passed to the `McpAgent`'s `onStart(props)`. Use this to pass user context, configuration, or other data to the MCP server instance
+  - `client` — MCP client configuration options
+  - `retry` — Retry options for the connection
+
+RPC transport connects your Agent directly to an `McpAgent` via Durable Object bindings without HTTP overhead. Refer to [MCP Transport](/agents/model-context-protocol/transport/) for details on configuring RPC transport.
 
 #### Returns
 
@@ -633,26 +647,26 @@ The override is used for both new connections (`addMcpServer`) and restored conn
 import { Agent } from "agents";
 import type { AgentMcpOAuthProvider } from "agents";
 
-export class MyAgent extends Agent {
+export class MyAgent extends Agent<Env> {
 	createMcpOAuthProvider(callbackUrl: string): AgentMcpOAuthProvider {
+		const env = this.env;
 		return {
 			get redirectUrl() {
 				return callbackUrl;
 			},
 			get clientMetadata() {
 				return {
-					client_id: this.env.MCP_CLIENT_ID,
-					client_secret: this.env.MCP_CLIENT_SECRET,
+					client_id: env.MCP_CLIENT_ID,
+					client_secret: env.MCP_CLIENT_SECRET,
 					redirect_uris: [callbackUrl],
 				};
 			},
 			clientInformation() {
 				return {
-					client_id: this.env.MCP_CLIENT_ID,
-					client_secret: this.env.MCP_CLIENT_SECRET,
+					client_id: env.MCP_CLIENT_ID,
+					client_secret: env.MCP_CLIENT_SECRET,
 				};
 			},
-			// ... implement other AgentMcpOAuthProvider methods
 		};
 	}
 }
@@ -831,7 +845,7 @@ Use error detection utilities to handle connection errors:
 <TypeScriptExample>
 
 ```ts
-import { isUnauthorized, isTransportNotImplemented } from "agents/mcp";
+import { isUnauthorized, isTransportNotImplemented } from "agents";
 
 export class MyAgent extends Agent {
 	async onRequest(request: Request) {
