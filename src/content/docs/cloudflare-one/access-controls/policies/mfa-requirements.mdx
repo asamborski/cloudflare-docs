@@ -9,12 +9,14 @@ tags:
   - Authentication
 ---
 
-import { GlossaryTooltip } from "~/components";
+import { GlossaryTooltip, Details } from "~/components";
 
 Cloudflare Access supports two methods of enforcing multi-factor authentication (MFA):
 
 - **[Identity provider-based MFA](#identity-provider-based-mfa)** — Require specific MFA methods reported by your identity provider (IdP).
 - **[Independent MFA](#independent-mfa)** — Prompt users for a second factor directly in Access, without relying on a third-party identity provider.
+
+For SSH connections to [infrastructure applications](/cloudflare-one/access-controls/applications/non-http/infrastructure-apps/), Access also supports [MFA with PIV keys](#infrastructure-applications).
 
 ## Identity provider-based MFA
 
@@ -156,3 +158,138 @@ In this example:
 - Users who access Application A and match Policy 2 are not prompted for MFA.
 - Users who access Application A and match neither policy must use an authenticator application or a security key, with a 24-hour session.
 - Users who access Application B are not prompted for MFA.
+
+## Infrastructure applications
+
+Infrastructure applications that use SSH support MFA with [YubiKey PIV keys](/cloudflare-one/access-controls/access-settings/independent-mfa/#enroll-a-piv-key-for-ssh). When MFA is required, the SSH proxy prompts the user for public key authentication using their enrolled PIV key before completing the connection. Users must [enroll their PIV key](/cloudflare-one/access-controls/access-settings/independent-mfa/#enroll-a-piv-key-for-ssh) through the App Launcher before they can connect.
+
+You can configure MFA for SSH at the application level or at the policy level. Like other Access applications, policy-level settings override application-level settings.
+
+### Configure MFA for an infrastructure application
+
+<Details header="Dashboard">
+
+1. In the [Cloudflare dashboard](https://dash.cloudflare.com/), go to **Zero Trust** > **Access controls** > **Applications**.
+2. Find your infrastructure application and select **Configure**.
+3. Go to the **Authentication** tab and select **MFA**.
+4. Select one of the following options:
+   - **Respect global enforcement setting** — Uses the [organization-level](/cloudflare-one/access-controls/access-settings/independent-mfa/) MFA configuration. This is the default.
+   - **Custom MFA settings** — Override the global setting with a custom MFA session duration for this application.
+   - **Disable MFA** — Users are not prompted for MFA when accessing this application.
+5. Select **Save**.
+
+</Details>
+
+<Details header="API">
+
+Add the `mfa_settings` object to your infrastructure application:
+
+```bash
+curl --request PUT \
+https://api.cloudflare.com/client/v4/accounts/{account_id}/access/apps/{app_id} \
+--header "Authorization: Bearer <API_TOKEN>" \
+--header "Content-Type: application/json" \
+--data '{
+  "mfa_settings": {
+    "mfa_use_global_settings": false,
+    "mfa_bypass": false,
+    "mfa_session_duration": 720,
+    "mfa_allowed_authenticators": ["infrastructure_ssh"]
+  }
+}'
+```
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `mfa_use_global_settings` | Boolean | If `true`, uses the organization-level MFA settings. Other fields are ignored. |
+| `mfa_bypass` | Boolean | If `true`, MFA is not required for this application, even if global settings enforce MFA. |
+| `mfa_session_duration` | Integer | Duration in minutes before the user must re-authenticate with MFA. Set to `0` to require MFA on every SSH connection. |
+| `mfa_allowed_authenticators` | Array | List of allowed authenticator types. Use `infrastructure_ssh` for PIV keys. |
+
+</Details>
+
+### Configure MFA for an infrastructure policy
+
+You can set different MFA requirements for different SSH usernames by configuring MFA at the policy level. Policy-level MFA settings override application-level settings.
+
+<Details header="Dashboard">
+
+1. In the [Cloudflare dashboard](https://dash.cloudflare.com/), go to **Zero Trust** > **Access controls** > **Applications**.
+2. Find your infrastructure application and select **Configure**.
+3. Go to **Policies** and select the policy you want to configure.
+4. Under **Multi-factor authentication (MFA)**, select an option:
+   - **Respect global enforcement setting** — Inherits the application or organization setting.
+   - **Custom MFA settings** — Set a custom MFA session duration for users who match this policy.
+   - **Disable MFA** — Users who match this policy are not prompted for MFA.
+5. Select **Save**.
+
+</Details>
+
+<Details header="API">
+
+Add the `mfa_settings` object to the policy within your infrastructure application. The `mfa_settings` object uses the same fields as the [application-level configuration](#configure-mfa-for-an-infrastructure-application).
+
+```bash
+curl --request PUT \
+https://api.cloudflare.com/client/v4/accounts/{account_id}/access/apps/{app_id} \
+--header "Authorization: Bearer <API_TOKEN>" \
+--header "Content-Type: application/json" \
+--data '{
+  "policies": [
+    {
+      "name": "Require MFA for root",
+      "decision": "allow",
+      "include": [
+        {
+          "email": {
+            "email": "jdoe@company.com"
+          }
+        }
+      ],
+      "mfa_settings": {
+        "mfa_use_global_settings": false,
+        "mfa_bypass": false,
+        "mfa_session_duration": 60,
+        "mfa_allowed_authenticators": ["infrastructure_ssh"]
+      },
+      "connection_rules": {
+        "ssh": {
+          "usernames": ["root"],
+          "allow_email_alias": false
+        }
+      }
+    }
+  ]
+}'
+```
+
+</Details>
+
+### MFA session duration for SSH
+
+The MFA session duration determines how long after performing MFA a user can open new SSH connections without being prompted again. After the session expires, the user must re-authenticate with their PIV key on their next SSH connection. Existing SSH sessions are not affected by session expiration. Set the session duration to `0` to require MFA on every SSH connection.
+
+MFA sessions are bound to the user's device. If a user switches to a different device, they must re-authenticate regardless of the remaining session duration.
+
+Session duration is evaluated in the following order:
+
+1. **Policy-level duration** — If set, applies to users who match the policy.
+2. **Application-level duration** — If no policy-level duration is set, uses the application setting.
+3. **Organization-level duration** — If neither policy nor application defines a duration, uses the global setting.
+
+When a user matches multiple policies that each define a session duration, Access uses the **shortest** duration across all matching policies.
+
+### Precedence and conflict resolution
+
+MFA configuration is evaluated from most specific to least specific: **policy** > **application** > **organization**.
+
+| Organization MFA | Application MFA | Policy MFA | Result |
+| --- | --- | --- | --- |
+| Required | Required | Required | MFA required |
+| Required | Required | Disabled | MFA not required (policy wins) |
+| Required | Disabled | (not set) | MFA not required (application wins) |
+| Disabled | Required | (not set) | MFA required (application wins) |
+| Disabled | Disabled | Required | MFA required (policy wins) |
+| Required | (not set) | (not set) | MFA required (organization setting applies) |
+
+Explicit settings at a lower level always override higher levels. If no explicit setting exists at a level, the next higher level applies.
