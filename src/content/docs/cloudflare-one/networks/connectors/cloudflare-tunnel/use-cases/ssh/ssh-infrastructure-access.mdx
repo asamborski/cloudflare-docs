@@ -107,18 +107,18 @@ chmod 600 /etc/ssh/ca.pub
 
 <Render file="ssh/restart-server" product="cloudflare-one" />
 
-## 8. (Optional) Require MFA for SSH
+## 8. (Optional) Require independent MFA for SSH
 
-You can require users to authenticate with a [YubiKey PIV key](/cloudflare-one/access-controls/access-settings/independent-mfa/#enroll-a-piv-key-for-ssh) before connecting to your SSH servers. When MFA is required, the SSH proxy prompts the user for public key authentication using their enrolled PIV key before generating the short-lived certificate.
+You can require users to authenticate with a [YubiKey PIV key](/cloudflare-one/access-controls/access-settings/independent-mfa/#enroll-a-piv-key-for-infrastructure-apps) before connecting to your SSH servers. When MFA is required, users must complete public key authentication with their enrolled PIV key before the connection is established.
 
-To configure MFA for SSH, refer to [Enforce MFA for infrastructure applications](/cloudflare-one/access-controls/policies/mfa-requirements/#infrastructure-applications).
+To configure independent MFA for SSH, refer to [Enforce MFA for infrastructure applications](/cloudflare-one/access-controls/policies/mfa-requirements/#infrastructure-applications).
 
 Before users can connect with MFA enabled, they must:
 
-1. [Enroll a PIV key](/cloudflare-one/access-controls/access-settings/independent-mfa/#enroll-a-piv-key-for-ssh) through the App Launcher.
+1. [Enroll a PIV key](/cloudflare-one/access-controls/access-settings/independent-mfa/#enroll-a-piv-key-for-infrastructure-apps) through the App Launcher.
 2. [Configure their SSH client](/cloudflare-one/access-controls/access-settings/independent-mfa/#configure-your-ssh-client) to use the enrolled PIV key.
 
-When the user runs `ssh <username>@<target IP>`, the SSH proxy checks if MFA is required for the matching policy. If required, the proxy requests public key authentication with the enrolled PIV key. The user touches their YubiKey (and enters their PIN if required by the key's PIN policy), and the proxy completes the connection.
+When the user runs `ssh <username>@<target IP>`, the SSH proxy checks if MFA is required for the matching policy. If required, the user must touch their YubiKey and enter their PIN (depending on the key's PIN policy). The proxy then completes the connection.
 
 ## 9. Connect as a user
 
