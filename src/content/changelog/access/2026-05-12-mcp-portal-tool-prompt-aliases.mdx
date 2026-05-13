@@ -1,0 +1,26 @@
+---
+title: Tool and prompt aliases for MCP server portals
+description: Rename tools and prompts and edit their descriptions on MCP server portals without modifying the upstream server.
+date: 2026-05-12
+products:
+  - access
+---
+
+Many organizations connect third-party MCP servers, such as those provided by SaaS vendors, through [MCP server portals](/cloudflare-one/access-controls/ai-controls/mcp-portals/) and have no control over how the server author named tools or wrote descriptions. Unclear names and missing descriptions make it harder for AI agents to select the right tool and harder for users to understand what is available to them.
+
+Administrators can now [rename tools and prompts](/cloudflare-one/access-controls/ai-controls/mcp-portals/#tool-and-prompt-aliases) and rewrite their descriptions directly on the portal, without modifying the upstream MCP server. For example, a vague tool named `super_cool_tool` can become `search_customer_records` with a description tailored to your organization.
+
+![Edit tool modal showing Name and Description fields for an MCP server tool](~/assets/images/changelog/access/portal-edit-tool-modal.png)
+
+Modified tools display a **Modified** label in the tools list so administrators can see which tools have been customized at a glance.
+
+![Tools authorized list showing a Modified label on a renamed tool](~/assets/images/changelog/access/portal-tools-authorized-modified.png)
+
+Aliases override the metadata that MCP clients receive when they connect to the portal. You can set them at two levels:
+
+- **Per portal**: Applies only within a specific portal. Takes precedence over server-level aliases.
+- **Per server**: Applies across all portals that use the server.
+
+You can reset an alias at any time to restore the original upstream name.
+
+For more information, refer to [Tool and prompt aliases](/cloudflare-one/access-controls/ai-controls/mcp-portals/#tool-and-prompt-aliases).
