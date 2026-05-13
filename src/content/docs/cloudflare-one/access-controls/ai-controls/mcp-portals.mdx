@@ -132,7 +132,7 @@ Cloudflare Access automatically creates an Access application for each MCP serve
 
 ## Tool and prompt aliases
 
-Administrators can rename tools and prompts and edit their descriptions at the portal or server level without modifying the upstream MCP server. Aliases override the original tool and prompt metadata that MCP clients receive when they connect to the portal.
+Tool and prompt names are defined by the upstream MCP server and cannot be changed through the MCP protocol itself. Aliases let administrators override these names and descriptions at the portal or server level so MCP clients receive metadata that better fits your organization.
 
 Use aliases to:
 
@@ -140,7 +140,7 @@ Use aliases to:
 - Add or improve descriptions so AI agents select the correct tool more often.
 - Standardize naming conventions across multiple MCP servers in a portal.
 
-Alias names must follow the [MCP specification](https://modelcontextprotocol.io/specification/2025-11-25/server/tools) requirements: 1–64 characters, using only `A-Z`, `a-z`, `0-9`, `_`, `-`, `.`, and `/`. Names must be unique within a single MCP server.
+Alias names can be up to 40 characters long and must match `^[a-zA-Z0-9]+([_-][a-zA-Z0-9]+)*$`. For example, `search_customer_records` or `get-user-profile`. No two tools or prompts on the same server can have the same name, whether that name is an alias or the original upstream name.
 
 ### Alias precedence
 
@@ -162,7 +162,7 @@ To set an alias that applies to a specific portal:
 1. In the [Cloudflare dashboard](https://dash.cloudflare.com/), go to **Zero Trust** > **Access controls** > **AI controls**.
 2. Find the portal you want to configure, then select the three dots > **Edit**.
 3. Go to the **Servers** tab.
-4. In the servers table, select the **Tools authorized** or **Prompts authorized** entry for the server you want to configure. This value is displayed as a fraction (for example, `10/10`) indicating how many tools or prompts are enabled out of the total available.
+4. In the servers table, select the **Tools authorized** or **Prompts authorized** value for the server you want to configure. This value appears as a fraction, for example `10/10`, showing how many are enabled.
 5. Find the tool or prompt you want to modify, then select the three dots > **Edit**.
 6. In the modal, update the **Name** and **Description** as needed.
 7. Select **Confirm**.
@@ -228,8 +228,8 @@ When an administrator sets an alias, connected MCP clients receive the aliased n
 
 If an administrator changes an alias while a user has an active session, the user must reauthenticate to the portal to receive the update. Refer to [Manage portal sessions](#manage-portal-sessions) for reauthentication options.
 
-:::note
-If the upstream MCP server changes a tool or prompt name during a sync, the portal continues to use the administrator's alias. The alias takes precedence over any upstream changes.
+:::caution
+If the upstream MCP server renames a tool or prompt, any alias you set for that tool or prompt will be removed after the next sync. The tool or prompt will appear under its new upstream name. After a sync, verify that your aliases still apply.
 :::
 
 ## Code mode
