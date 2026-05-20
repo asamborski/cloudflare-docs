@@ -31,21 +31,20 @@ Valid `pcx_content_type` values: `changelog`, `concept`, `configuration`, `desig
 
 ### Optional fields
 
-| Field                  | Type    | Description                                                                                           |
-| ---------------------- | ------- | ----------------------------------------------------------------------------------------------------- |
-| `sidebar.order`        | number  | Sort order in the left nav. Lower = higher.                                                           |
-| `sidebar.label`        | string  | Override the nav label (defaults to `title`).                                                         |
-| `sidebar.hidden`       | boolean | Hide from nav but keep the page accessible.                                                           |
-| `products`             | array   | Related directory entries by filename from `src/content/directory/`.                                  |
-| `tags`                 | array   | Related keywords. Validated against allowlist in `src/schemas/tags.ts` — invalid tags fail the build. |
-| `difficulty`           | string  | For tutorials: `Beginner`, `Intermediate`, or `Advanced`. Shown in tutorial listings.                 |
-| `reviewed`             | string  | `YYYY-MM-DD` of last explicit end-to-end review.                                                      |
-| `summary`              | string  | Short description rendered below the page title on the page itself.                                   |
-| `noindex`              | boolean | Adds `noindex` to the page — use for deprecated/legacy content.                                       |
-| `chatbot_deprioritize` | boolean | De-prioritizes the page in Support AI responses. Companion to `noindex`.                              |
-| `canonical`            | string  | Override the `<link rel="canonical">` URL.                                                            |
-| `hideChildren`         | boolean | Collapses this nav group to a single link to the index page.                                          |
-| `feedback`             | boolean | Show/hide the feedback prompt. Defaults to `true`.                                                    |
+| Field                  | Type    | Description                                                                           |
+| ---------------------- | ------- | ------------------------------------------------------------------------------------- |
+| `sidebar.order`        | number  | Sort order in the left nav. Lower = higher.                                           |
+| `sidebar.label`        | string  | Override the nav label (defaults to `title`).                                         |
+| `sidebar.hidden`       | boolean | Hide from nav but keep the page accessible.                                           |
+| `products`             | array   | Related directory entries by filename from `src/content/directory/`.                  |
+| `difficulty`           | string  | For tutorials: `Beginner`, `Intermediate`, or `Advanced`. Shown in tutorial listings. |
+| `reviewed`             | string  | `YYYY-MM-DD` of last explicit end-to-end review.                                      |
+| `summary`              | string  | Short description rendered below the page title on the page itself.                   |
+| `noindex`              | boolean | Adds `noindex` to the page — use for deprecated/legacy content.                       |
+| `chatbot_deprioritize` | boolean | De-prioritizes the page in Support AI responses. Companion to `noindex`.              |
+| `canonical`            | string  | Override the `<link rel="canonical">` URL.                                            |
+| `hideChildren`         | boolean | Collapses this nav group to a single link to the index page.                          |
+| `feedback`             | boolean | Show/hide the feedback prompt. Defaults to `true`.                                    |
 
 Example:
 
@@ -60,8 +59,6 @@ sidebar:
   order: 2
 difficulty: Beginner
 reviewed: 2025-01-15
-tags:
-  - Tunnel
 ---
 ```
 
