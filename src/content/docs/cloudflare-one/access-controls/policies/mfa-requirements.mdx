@@ -178,7 +178,7 @@ You can configure MFA for infrastructure apps at the application level or at the
 
 ### Configure MFA for an infrastructure application
 
-Infrastructure applications use a PIV key authenticator (`infrastructure_ssh`) that is specific to SSH connections. This authenticator type is not available for other Access application types.
+Infrastructure applications use a PIV key authenticator (`piv_key`) that is specific to SSH connections. This authenticator type is not available for other Access application types.
 
 :::note
 <Render file="access/piv-key-global-settings-warning" product="cloudflare-one" />
@@ -199,7 +199,7 @@ Infrastructure applications use a PIV key authenticator (`infrastructure_ssh`) t
 
 <Details header="API">
 
-Add the `mfa_settings` object to your infrastructure application:
+To update MFA settings for an infrastructure application, first send a `GET` request to retrieve the full application configuration, then send a `PUT` request with the complete application body including the `mfa_config` object. The `PUT` request must contain all fields returned by the `GET` to avoid overwriting existing settings.
 
 ```bash
 curl --request PUT \
@@ -207,11 +207,10 @@ https://api.cloudflare.com/client/v4/accounts/{account_id}/access/apps/{app_id} 
 --header "Authorization: Bearer <API_TOKEN>" \
 --header "Content-Type: application/json" \
 --data '{
-  "mfa_settings": {
-    "mfa_use_global_settings": false,
+  "mfa_config": {
     "mfa_disabled": false,
-    "mfa_session_duration": 720,
-    "mfa_allowed_authenticators": ["infrastructure_ssh"]
+    "session_duration": "12h",
+    "allowed_authenticators": ["piv_key"]
   }
 }'
 ```
@@ -244,39 +243,34 @@ You can set different MFA requirements for different SSH usernames by configurin
 
 <Details header="API">
 
-Add the `mfa_settings` object to the policy within your infrastructure application. The `mfa_settings` object uses the same fields as the [application-level configuration](#configure-mfa-for-an-infrastructure-application).
+To update MFA settings for a policy, first send a `GET` request to retrieve the full policy configuration, then send a `PUT` request with the complete policy body including the `mfa_config` object. The `mfa_config` object uses the same fields as the [application-level configuration](#configure-mfa-for-an-infrastructure-application).
 
 ```bash
 curl --request PUT \
-https://api.cloudflare.com/client/v4/accounts/{account_id}/access/apps/{app_id} \
+https://api.cloudflare.com/client/v4/accounts/{account_id}/access/policies/{policy_id} \
 --header "Authorization: Bearer <API_TOKEN>" \
 --header "Content-Type: application/json" \
 --data '{
-  "policies": [
+  "name": "Require MFA for root",
+  "decision": "allow",
+  "include": [
     {
-      "name": "Require MFA for root",
-      "decision": "allow",
-      "include": [
-        {
-          "email": {
-            "email": "jdoe@company.com"
-          }
-        }
-      ],
-      "mfa_settings": {
-        "mfa_use_global_settings": false,
-        "mfa_disabled": false,
-        "mfa_session_duration": 60,
-        "mfa_allowed_authenticators": ["infrastructure_ssh"]
-      },
-      "connection_rules": {
-        "ssh": {
-          "usernames": ["root"],
-          "allow_email_alias": false
-        }
+      "email": {
+        "email": "jdoe@company.com"
       }
     }
-  ]
+  ],
+  "mfa_config": {
+    "mfa_disabled": false,
+    "session_duration": "1h",
+    "allowed_authenticators": ["piv_key"]
+  },
+  "connection_rules": {
+    "ssh": {
+      "usernames": ["root"],
+      "allow_email_alias": false
+    }
+  }
 }'
 ```
 
@@ -305,8 +299,6 @@ MFA configuration is evaluated from most specific to least specific: **policy** 
 | Required         | Required        | Required   | MFA required                                |
 | Required         | Required        | Disabled   | MFA not required (policy wins)              |
 | Required         | Disabled        | (not set)  | MFA not required (application wins)         |
-| Disabled         | Required        | (not set)  | MFA required (application wins)             |
-| Disabled         | Disabled        | Required   | MFA required (policy wins)                  |
 | Required         | (not set)       | (not set)  | MFA required (organization setting applies) |
 
-Explicit settings at a lower level always override higher levels. If no explicit setting exists at a level, the next higher level applies.
+Organization-level MFA must be enabled for users to enroll PIV keys. Explicit settings at a lower level (policy or application) override higher levels. If no explicit setting exists at a level, the next higher level applies.
