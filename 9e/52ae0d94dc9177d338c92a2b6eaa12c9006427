@@ -1,0 +1,19 @@
+.github/CODEOWNERS
+  s_74a35029772d03::t_a5073f236b8062 88,92,94,96-98,103,105-106,108-114,116-120,124-125
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "9e52ae0d94dc9177d338c92a2b6eaa12c9006427",
+  "prompts": {},
+  "sessions": {
+    "s_74a35029772d03": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_fa641a999ffesU6Tlh6pdcDpCK",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "asamborski <asamborski@cloudflare.com>"
+    }
+  }
+}
