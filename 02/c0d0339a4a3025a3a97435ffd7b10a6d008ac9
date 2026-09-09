@@ -1,0 +1,21 @@
+src/content/changelog/browser-isolation/2026-09-09-ios-tap-to-type.mdx
+  s_db63bc40fd12af::t_b19d39d69bc1f1 1-20
+src/content/docs/cloudflare-one/remote-browser-isolation/known-limitations.mdx
+  s_db63bc40fd12af::t_93ec3b8072de67 40-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "02c0d0339a4a3025a3a97435ffd7b10a6d008ac9",
+  "prompts": {},
+  "sessions": {
+    "s_db63bc40fd12af": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f92f77952fferRJQg59nJpxCdQ",
+        "model": "gpt-5.5"
+      },
+      "human_author": "asamborski <asamborski@cloudflare.com>"
+    }
+  }
+}
