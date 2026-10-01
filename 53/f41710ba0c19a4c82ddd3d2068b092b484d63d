@@ -1,0 +1,19 @@
+src/content/changelog/cloudflare-one/2026-10-01-infrastructure-target-tag-permissions.mdx
+  s_2c9e143bea3b22::t_f2c5ab31e7e2de 4,12
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "53f41710ba0c19a4c82ddd3d2068b092b484d63d",
+  "prompts": {},
+  "sessions": {
+    "s_2c9e143bea3b22": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_f06ee1e0effeAasrSz1cq7aLAI",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "asamborski <asamborski@cloudflare.com>"
+    }
+  }
+}
