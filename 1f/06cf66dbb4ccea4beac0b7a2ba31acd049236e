@@ -1,0 +1,19 @@
+src/content/docs/cloudflare-one/remote-browser-isolation/isolation-policies.mdx
+  s_3c41605eff86b4::t_5e9b5424bcfbda 118-120,126-137
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "1f06cf66dbb4ccea4beac0b7a2ba31acd049236e",
+  "prompts": {},
+  "sessions": {
+    "s_3c41605eff86b4": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e9b145263ffev6Axsz2lXpw3Wx",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "asamborski <asamborski@cloudflare.com>"
+    }
+  }
+}
