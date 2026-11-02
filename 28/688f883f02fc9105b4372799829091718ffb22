@@ -1,0 +1,19 @@
+src/content/changelog/browser-isolation/2026-11-03-granular-keyboard-controls.mdx
+  s_9f6c57b8b6849c::t_88dbd604f1a89d 1-16
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "28688f883f02fc9105b4372799829091718ffb22",
+  "prompts": {},
+  "sessions": {
+    "s_9f6c57b8b6849c": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e62ae444fffeEO5D3PAJxFboXb",
+        "model": "claude-opus-4-6"
+      },
+      "human_author": "asamborski <asamborski@cloudflare.com>"
+    }
+  }
+}
